@@ -1,0 +1,167 @@
+﻿@model OOPPortfolioWeb.Models.ShapeInputModel
+
+<h1 class="text-center mb-4">Shape Class Hierarchy</h1>
+
+<div class="container">
+    <div class="row">
+        <!-- Left Container: Input Fields -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Input Parameters</h5>
+                    <form method="post" id="shapeForm">
+                        <div class="mb-3">
+                            <label for="ShapeType" class="form-label">Shape Type</label>
+                            <select id="ShapeType" name="ShapeType" class="form-select" required onchange="onShapeTypeChange()">
+                                <option value="">Select a shape</option>
+                                <option value="Circle">Circle</option>
+                                <option value="Rectangle">Rectangle</option>
+                                <option value="Triangle">Triangle</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Color" class="form-label">Color</label>
+                            <input type="text" id="Color" name="Color" class="form-control" required disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Radius" class="form-label">Radius (for Circle)</label>
+                            <input type="number" id="Radius" name="Radius" class="form-control" step="0.01" disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Width" class="form-label">Width (for Rectangle)</label>
+                            <input type="number" id="Width" name="Width" class="form-control" step="0.01" disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Height" class="form-label">Height (for Rectangle/Triangle)</label>
+                            <input type="number" id="Height" name="Height" class="form-control" step="0.01" disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="BaseLength" class="form-label">Base Length (for Triangle)</label>
+                            <input type="number" id="BaseLength" name="BaseLength" class="form-control" step="0.01" disabled />
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Calculate Area</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Container: Shape Display -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Shape Display</h5>
+                    <div id="shapeDisplay" class="text-center">
+                        <p class="text-muted">Your shape will appear here after calculation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onShapeTypeChange() {
+        const shapeType = document.getElementById("ShapeType").value;
+        const colorField = document.getElementById("Color");
+        const radiusField = document.getElementById("Radius");
+        const widthField = document.getElementById("Width");
+        const heightField = document.getElementById("Height");
+        const baseLengthField = document.getElementById("BaseLength");
+
+        // Disable all fields initially
+        colorField.disabled = true;
+        radiusField.disabled = true;
+        widthField.disabled = true;
+        heightField.disabled = true;
+        baseLengthField.disabled = true;
+
+        // Enable fields based on the selected shape
+        if (shapeType) {
+            colorField.disabled = false;
+            if (shapeType === "Circle") {
+                radiusField.disabled = false;
+            } else if (shapeType === "Rectangle") {
+                widthField.disabled = false;
+                heightField.disabled = false;
+            } else if (shapeType === "Triangle") {
+                baseLengthField.disabled = false;
+                heightField.disabled = false;
+            }
+        }
+    }
+
+    // Render the shape after form submission
+    document.getElementById("shapeForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent form submission
+
+        const shapeType = document.getElementById("ShapeType").value;
+        const color = document.getElementById("Color").value;
+        const radius = parseFloat(document.getElementById("Radius").value);
+        const width = parseFloat(document.getElementById("Width").value);
+        const height = parseFloat(document.getElementById("Height").value);
+        const baseLength = parseFloat(document.getElementById("BaseLength").value);
+
+        const shapeDisplay = document.getElementById("shapeDisplay");
+        shapeDisplay.innerHTML = ""; // Clear previous shape
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 400;
+        canvas.height = 400;
+        const ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = color;
+
+        let userInputs = `<p><strong>Shape Type:</strong> ${shapeType}</p>`;
+        userInputs += `<p><strong>Color:</strong> ${color}</p>`;
+
+        if (shapeType === "Circle" && radius) {
+            ctx.beginPath();
+            ctx.arc(200, 200, radius * 10, 0, 2 * Math.PI); // Scale radius for display
+            ctx.fill();
+            userInputs += `<p><strong>Radius:</strong> ${radius}</p>`;
+            userInputs += `<p><strong>Area:</strong> ${(Math.PI * radius * radius).toFixed(2)}</p>`;
+        } else if (shapeType === "Rectangle" && width && height) {
+            ctx.fillRect(100, 100, width * 10, height * 10); // Scale dimensions for display
+            userInputs += `<p><strong>Width:</strong> ${width}</p>`;
+            userInputs += `<p><strong>Height:</strong> ${height}</p>`;
+            userInputs += `<p><strong>Area:</strong> ${(width * height).toFixed(2)}</p>`;
+        } else if (shapeType === "Triangle" && baseLength && height) {
+            ctx.beginPath();
+            ctx.moveTo(200, 200 - height * 10); // Top vertex
+            ctx.lineTo(200 - baseLength * 5, 200 + height * 10); // Bottom-left vertex
+            ctx.lineTo(200 + baseLength * 5, 200 + height * 10); // Bottom-right vertex
+            ctx.closePath();
+            ctx.fill();
+            userInputs += `<p><strong>Base Length:</strong> ${baseLength}</p>`;
+            userInputs += `<p><strong>Height:</strong> ${height}</p>`;
+            userInputs += `<p><strong>Area:</strong> ${(0.5 * baseLength * height).toFixed(2)}</p>`;
+        } else {
+            userInputs = `<p>Invalid input or missing parameters.</p>`;
+        }
+
+        shapeDisplay.innerHTML = userInputs;
+        shapeDisplay.appendChild(canvas);
+
+        // Clear the input fields
+        document.getElementById("shapeForm").reset();
+        onShapeTypeChange(); // Reset field states
+    });
+
+    // Reset the form and shape display
+    function resetForm() {
+        document.getElementById("shapeForm").reset();
+        onShapeTypeChange(); // Reset field states
+        const shapeDisplay = document.getElementById("shapeDisplay");
+        shapeDisplay.innerHTML = `<p class="text-muted">Your shape will appear here after calculation.</p>`;
+    }
+</script>
